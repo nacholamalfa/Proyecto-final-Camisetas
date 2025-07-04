@@ -1,6 +1,5 @@
 package techlab.spring.entity;
 
-
 public class Camiseta {
     private static int contadorId = 1;
    private long id;

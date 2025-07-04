@@ -1,368 +1,247 @@
+  const API_BASE_URL = 'http://localhost:8080/camisetas';
+    let cart = [];
+    let allProducts = [];
 
-// Variables globales
-let camisetasData = [];
-let currentFilter = 'all';
-
-// Mapeo de deportes para obtener imágenes
-const deporteImages = {
-  'FUTBOL': 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=400&h=400&fit=crop',
-  'NBA': 'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=400&h=400&fit=crop',
-  'NFL': 'https://images.unsplash.com/photo-1566577739112-5180d4bf9390?w=400&h=400&fit=crop'
-};
-
-// Mapeo de equipos para obtener colores representativos
-const equipoColors = {
-  'Boca': '#003d82',
-  'Lakers': '#552583',
-  'Dolphins': '#008e97',
-  'Real Madrid': '#ffffff',
-  'Barcelona': '#a50044',
-  'PSG': '#004170'
-};
-
-document.addEventListener("DOMContentLoaded", () => {
-  initializeApp();
-});
-
-// Inicialización de la aplicación
-function initializeApp() {
-  showLoadingSpinner();
-  fetchCamisetas();
-  setupEventListeners();
-  updateCartUI();
-}
-
-// Configurar event listeners
-function setupEventListeners() {
-  // Filtros
-  document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.addEventListener('click', handleFilterClick);
-  });
-
-  // Carrito
-  document.getElementById('open-cart').addEventListener('click', openCart);
-  document.getElementById('close-cart').addEventListener('click', closeCart);
-  document.getElementById('cart-overlay').addEventListener('click', closeCart);
-  document.getElementById('vaciar-carrito').addEventListener('click', clearCart);
-  document.getElementById('realizar-compra').addEventListener('click', realizarCompra);
-
-  // Navegación suave
-  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-      e.preventDefault();
-      const target = document.querySelector(this.getAttribute('href'));
-      if (target) {
-        target.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start'
-        });
-      }
+    document.addEventListener('DOMContentLoaded', function () {
+        loadProducts();
+        updateCartUI();
+        setupEventListeners();
     });
-  });
-}
 
-// Obtener camisetas del backend
-function fetchCamisetas() {
-  fetch("http://localhost:8080/camisetas/list")
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      return response.json();
-    })
-    .then(data => {
-      camisetasData = data;
-      hideLoadingSpinner();
-      renderCamisetas(data);
-    })
-    .catch(error => {
-      console.error("Error al obtener camisetas:", error);
-      hideLoadingSpinner();
-      showErrorMessage();
-    });
-}
-
-// Mostrar spinner de carga
-function showLoadingSpinner() {
-  document.getElementById('loading-spinner').style.display = 'block';
-  document.getElementById('camisetas-container').style.display = 'none';
-}
-
-// Ocultar spinner de carga
-function hideLoadingSpinner() {
-  document.getElementById('loading-spinner').style.display = 'none';
-  document.getElementById('camisetas-container').style.display = 'grid';
-}
-
-// Mostrar mensaje de error
-function showErrorMessage() {
-  const container = document.getElementById('camisetas-container');
-  container.innerHTML = `
-    <div class="error-message">
-      <i class="fas fa-exclamation-triangle"></i>
-      <h3>Error al cargar las camisetas</h3>
-      <p>No se pudieron cargar los productos. Por favor, verifica que el servidor esté funcionando.</p>
-      <button onclick="fetchCamisetas()" class="btn btn-primary">
-        <i class="fas fa-refresh"></i> Reintentar
-      </button>
-    </div>
-  `;
-  container.style.display = 'block';
-}
-
-// Renderizar camisetas
-function renderCamisetas(camisetas) {
-  const container = document.getElementById('camisetas-container');
-
-  if (camisetas.length === 0) {
-    container.innerHTML = `
-      <div class="no-products">
-        <i class="fas fa-tshirt"></i>
-        <h3>No hay camisetas disponibles</h3>
-        <p>No se encontraron productos que coincidan con tu búsqueda.</p>
-      </div>
-    `;
-    return;
-  }
-
-  container.innerHTML = camisetas.map(camiseta => `
-    <div class="product-card" data-deporte="${camiseta.deporte}">
-      <div class="product-image">
-        <img src="${getImageForDeporte(camiseta.deporte)}" alt="${camiseta.equipo}">
-        <div class="product-overlay">
-          <div class="product-actions">
-            <button class="action-btn" onclick="addToCart(${camiseta.id}, '${getImageForDeporte(camiseta.deporte)}', '${camiseta.equipo}', ${camiseta.precio}, this)">
-              <i class="fas fa-shopping-cart"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div class="product-info">
-        <div class="product-category">
-          <i class="fas ${getIconForDeporte(camiseta.deporte)}"></i>
-          ${camiseta.deporte}
-        </div>
-        <h3 class="product-title">${camiseta.equipo}</h3>
-        <div class="product-details">
-          <span class="product-price">$${camiseta.precio}</span>
-          <span class="product-stock">Stock: ${camiseta.stock || 'Disponible'}</span>
-        </div>
-        <button class="add-to-cart-btn" onclick="addToCart(${camiseta.id}, '${getImageForDeporte(camiseta.deporte)}', '${camiseta.equipo}', ${camiseta.precio}, this)">
-          <i class="fas fa-plus"></i>
-          Agregar al Carrito
-        </button>
-      </div>
-    </div>
-  `).join('');
-}
-
-// Obtener imagen para el deporte
-function getImageForDeporte(deporte) {
-  return deporteImages[deporte] || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=400&h=400&fit=crop';
-}
-
-// Obtener icono para el deporte
-function getIconForDeporte(deporte) {
-  const icons = {
-    'FUTBOL': 'fa-futbol',
-    'NBA': 'fa-basketball-ball',
-    'NFL': 'fa-football-ball'
-  };
-  return icons[deporte] || 'fa-tshirt';
-}
-
-// Manejar clic en filtros
-function handleFilterClick(e) {
-  const filter = e.target.dataset.filter;
-  currentFilter = filter;
-
-  // Actualizar botones activos
-  document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.classList.remove('active');
-  });
-  e.target.classList.add('active');
-
-  // Filtrar productos
-  const filteredCamisetas = filter === 'all'
-    ? camisetasData
-    : camisetasData.filter(camiseta => camiseta.deporte === filter);
-
-  renderCamisetas(filteredCamisetas);
-}
-
-// Agregar al carrito
-window.addToCart = function(id, image, title, price, button) {
-  let cart = JSON.parse(localStorage.getItem("cart")) || [];
-  let existingProduct = cart.find(product => product.id === id);
-
-  if (existingProduct) {
-    existingProduct.quantity++;
-  } else {
-    cart.push({ id, image, title, price, quantity: 1 });
-  }
-
-  localStorage.setItem("cart", JSON.stringify(cart));
-  updateCartUI();
-
-  // Mostrar feedback visual
-  showAddToCartFeedback(button);
-
-  // Abrir carrito automáticamente en móviles
-  if (window.innerWidth <= 768) {
-    setTimeout(() => openCart(), 500);
-  }
-};
-
-// Mostrar feedback de agregar al carrito
-function showAddToCartFeedback(button) {
-  const originalContent = button.innerHTML;
-  button.innerHTML = '<i class="fas fa-check"></i> Agregado';
-  button.classList.add('added');
-  button.disabled = true;
-
-  setTimeout(() => {
-    button.innerHTML = originalContent;
-    button.classList.remove('added');
-    button.disabled = false;
-  }, 2000);
-}
-
-// Actualizar UI del carrito
-function updateCartUI() {
-  const cart = JSON.parse(localStorage.getItem("cart")) || [];
-  const carritoItems = document.getElementById("carrito-items");
-  let total = 0;
-
-  // Actualizar contadores
-  const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
-  document.getElementById("cart-counter").textContent = itemCount;
-  document.getElementById("cart-counter-nav").textContent = itemCount;
-
-  if (cart.length === 0) {
-    carritoItems.innerHTML = `
-      <div class="empty-cart">
-        <i class="fas fa-shopping-cart"></i>
-        <h4>Tu carrito está vacío</h4>
-        <p>Agrega algunos productos para comenzar</p>
-      </div>
-    `;
-    document.getElementById("realizar-compra").disabled = true;
-  } else {
-    document.getElementById("realizar-compra").disabled = false;
-
-    carritoItems.innerHTML = cart.map(item => {
-      const subtotal = item.price * item.quantity;
-      total += subtotal;
-
-      return `
-        <div class="cart-item">
-          <img src="${item.image}" alt="${item.title}">
-          <div class="cart-item-details">
-            <h6 class="cart-item-title">${item.title}</h6>
-            <div class="cart-item-controls">
-              <button class="quantity-btn" onclick="updateQuantity(${item.id}, -1)">
-                <i class="fas fa-minus"></i>
-              </button>
-              <span class="quantity">${item.quantity}</span>
-              <button class="quantity-btn" onclick="updateQuantity(${item.id}, 1)">
-                <i class="fas fa-plus"></i>
-              </button>
-            </div>
-            <div class="cart-item-price">$${subtotal.toFixed(2)}</div>
-          </div>
-          <button class="remove-btn" onclick="removeFromCart(${item.id})">
-            <i class="fas fa-trash"></i>
-          </button>
-        </div>
-      `;
-    }).join('');
-  }
-
-  document.getElementById("carrito-total").textContent = total.toFixed(2);
-}
-
-// Actualizar cantidad
-window.updateQuantity = function(id, change) {
-  let cart = JSON.parse(localStorage.getItem("cart")) || [];
-  let product = cart.find(item => item.id === id);
-
-  if (product) {
-    product.quantity += change;
-    if (product.quantity <= 0) {
-      cart = cart.filter(item => item.id !== id);
+    function setupEventListeners() {
+        document.getElementById('cart-toggle').addEventListener('click', toggleCart);
+        document.getElementById('cart-close').addEventListener('click', closeCart);
+        document.getElementById('overlay').addEventListener('click', closeCart);
+        document.getElementById('search-team').addEventListener('input', debounce(handleSearch, 300));
     }
-  }
 
-  localStorage.setItem("cart", JSON.stringify(cart));
-  updateCartUI();
-};
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
 
-// Eliminar del carrito
-window.removeFromCart = function(id) {
-  let cart = JSON.parse(localStorage.getItem("cart")) || [];
-  cart = cart.filter(item => item.id !== id);
-  localStorage.setItem("cart", JSON.stringify(cart));
-  updateCartUI();
-};
+    async function loadProducts() {
+        showLoading(true);
+        clearError();
 
-// Abrir carrito
-function openCart() {
-  document.getElementById('cart-sidebar').classList.add('active');
-  document.getElementById('cart-overlay').classList.add('active');
-  document.body.style.overflow = 'hidden';
-}
+        try {
+            const response = await fetch(`${API_BASE_URL}/list`);
+            if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
+            const products = await response.json();
+            allProducts = products;
+            displayProducts(products);
+        } catch (error) {
+            console.error('Error al cargar productos:', error);
+            showError('Error al cargar los productos. Asegúde de que el servidor esté ejecutándose en http://localhost:8080');
+        } finally {
+            showLoading(false);
+        }
+    }
 
-// Cerrar carrito
-function closeCart() {
-  document.getElementById('cart-sidebar').classList.remove('active');
-  document.getElementById('cart-overlay').classList.remove('active');
-  document.body.style.overflow = 'auto';
-}
+    function displayProducts(products) {
+        const container = document.getElementById('productos-container');
 
-// Vaciar carrito
-function clearCart() {
-  if (confirm('¿Estás seguro de que deseas vaciar el carrito?')) {
-    localStorage.removeItem("cart");
-    updateCartUI();
-  }
-}
+        if (!products || products.length === 0) {
+            container.innerHTML = `
+                <div class="col-12 text-center">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        No se encontraron productos.
+                    </div>
+                </div>
+            `;
+            return;
+        }
 
-// Realizar compra
-function realizarCompra() {
-  const cart = JSON.parse(localStorage.getItem("cart")) || [];
+        container.innerHTML = products.map(product => `
+            <div class="col-md-4 col-lg-3 mb-4 fade-in">
+                <div class="product-card">
+                    <img src="${product.imagenUrl || ''}"
+                         alt="${product.equipo}"
+                         class="product-image"
+                         onerror="this.remove()">
+                    <div class="product-info">
+                        <h5 class="product-title">${product.equipo}</h5>
+                        <span class="product-deporte">
+                            <i class="fas fa-tag me-1"></i>${product.deporte.nombre || product.deporte}
+                        </span>
+                        <div class="product-price">$${product.precio.toFixed(2)}</div>
+                        ${product.descripcion ? `<p class="text-muted small">${product.descripcion}</p>` : ''}
+                        <button class="add-to-cart-btn" onclick="addToCart(${product.id}, '${product.equipo}', ${product.precio}, '${product.deporte.nombre || product.deporte}', '${product.imagenUrl || ''}')">
+                            <i class="fas fa-cart-plus me-1"></i>Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
 
-  if (cart.length === 0) {
-    alert("Tu carrito está vacío");
-    return;
-  }
+    async function buscarPorEquipo() {
+        const equipo = document.getElementById('search-team').value.trim();
+        if (!equipo) return showError('Por favor ingresa el nombre de un equipo');
+        showLoading(true);
+        clearError();
 
-  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  document.getElementById("modal-total").textContent = total.toFixed(2);
+        try {
+            const response = await fetch(`${API_BASE_URL}/buscarPorEquipo?equipo=${encodeURIComponent(equipo)}`);
+            if (response.status === 404) {
+                showError(`No se encontró ninguna camiseta del equipo "${equipo}"`);
+                displayProducts([]);
+                return;
+            }
+            if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
+            const product = await response.json();
+            displayProducts([product]);
+        } catch (error) {
+            console.error('Error al buscar por equipo:', error);
+            showError('Error al buscar el equipo');
+        } finally {
+            showLoading(false);
+        }
+    }
 
-  // Mostrar modal
-  const modal = new bootstrap.Modal(document.getElementById("compraExitosaModal"));
-  modal.show();
+    async function filtrarPorDeporte() {
+        const deporte = document.getElementById('filter-sport').value;
+        if (!deporte) return showError('Por favor selecciona un deporte');
+        showLoading(true);
+        clearError();
 
-  // Limpiar carrito
-  localStorage.removeItem("cart");
-  updateCartUI();
-  closeCart();
-}
+        try {
+            const response = await fetch(`${API_BASE_URL}/buscarPorDeporte?deporte=${deporte}`);
+            if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
+            const products = await response.json();
+            displayProducts(products);
+        } catch (error) {
+            console.error('Error al filtrar por deporte:', error);
+            showError('Error al filtrar por deporte');
+        } finally {
+            showLoading(false);
+        }
+    }
 
-// Efectos de scroll para el header
-window.addEventListener('scroll', () => {
-  const header = document.querySelector('.modern-header');
-  if (window.scrollY > 100) {
-    header.classList.add('scrolled');
-  } else {
-    header.classList.remove('scrolled');
-  }
-});
+    async function filtrarPorPrecio() {
+        const precio = document.getElementById('max-price').value;
+        if (!precio || precio <= 0) return showError('Por favor ingresa un precio válido');
+        showLoading(true);
+        clearError();
 
-// Responsive: cerrar carrito al cambiar tamaño de ventana
-window.addEventListener('resize', () => {
-  if (window.innerWidth > 768) {
-    closeCart();
-  }
-});
+        try {
+            const response = await fetch(`${API_BASE_URL}/buscarPorPrecio?precio=${precio}`);
+            if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
+            const products = await response.json();
+            displayProducts(products);
+        } catch (error) {
+            console.error('Error al filtrar por precio:', error);
+            showError('Error al filtrar por precio');
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    function mostrarTodos() {
+        clearError();
+        displayProducts(allProducts);
+    }
+
+    function handleSearch() {
+        const searchTerm = document.getElementById('search-team').value.toLowerCase();
+        if (!searchTerm) return displayProducts(allProducts);
+        const filtered = allProducts.filter(p => p.equipo.toLowerCase().includes(searchTerm));
+        displayProducts(filtered);
+    }
+
+    function addToCart(id, equipo, precio, deporte, imagenUrl) {
+        const existing = cart.find(item => item.id === id);
+        if (existing) {
+            existing.cantidad++;
+        } else {
+            cart.push({ id, equipo, precio, deporte, imagenUrl, cantidad: 1 });
+        }
+        updateCartUI();
+    }
+
+    function removeFromCart(id) {
+        cart = cart.filter(item => item.id !== id);
+        updateCartUI();
+    }
+
+    function updateCartUI() {
+        const cartContainer = document.getElementById('cart-content');
+        const cartTotal = document.getElementById('cart-total');
+        const itemCount = document.getElementById('cart-counter');
+
+        if (!cartContainer || !cartTotal || !itemCount) return;
+
+        cartContainer.innerHTML = '';
+        let total = 0;
+        let count = 0;
+
+        if (cart.length === 0) {
+            cartContainer.innerHTML = `
+                <div class="text-center text-muted">
+                    <i class="fas fa-shopping-cart" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                    <p>Tu carrito está vacío</p>
+                </div>
+            `;
+        }
+
+        cart.forEach(item => {
+            total += item.precio * item.cantidad;
+            count += item.cantidad;
+
+            cartContainer.innerHTML += `
+                <div class="cart-item">
+                    <img src="${item.imagenUrl || ''}" alt="${item.equipo}">
+                    <div class="cart-item-info">
+                        <div class="cart-item-title">${item.equipo}</div>
+                        <div class="cart-item-price">$${item.precio.toFixed(2)} x ${item.cantidad}</div>
+                    </div>
+                    <button class="btn btn-sm btn-danger" onclick="removeFromCart(${item.id})">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            `;
+        });
+
+        cartTotal.textContent = total.toFixed(2);
+        itemCount.textContent = count;
+    }
+
+    function toggleCart() {
+        document.getElementById('cart-sidebar').classList.add('active');
+        document.getElementById('overlay').classList.add('active');
+    }
+
+    function closeCart() {
+        document.getElementById('cart-sidebar').classList.remove('active');
+        document.getElementById('overlay').classList.remove('active');
+    }
+
+    function showLoading(isLoading) {
+        const loader = document.getElementById('loading');
+        if (loader) loader.style.display = isLoading ? 'block' : 'none';
+    }
+
+    function showError(message) {
+        const container = document.getElementById('error-container');
+        if (container) {
+            container.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>${message}
+                </div>
+            `;
+        }
+    }
+
+    function clearError() {
+        const container = document.getElementById('error-container');
+        if (container) container.innerHTML = '';
+    }
+
