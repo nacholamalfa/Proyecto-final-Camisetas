@@ -14,13 +14,16 @@ public class Camiseta {
     public Camiseta() {
         this.id = contadorId++;;
     }
-    public Camiseta(String equipo, double precio, int stock, String talle, Deporte deporte) {
+    public Camiseta(String equipo, double precio, int stock, String talle, Deporte deporte, String imagenUrl) {
+        this.id = contadorId++;
         this.equipo = equipo;
         this.precio = precio;
         this.stock = stock;
         this.talle = talle;
         this.deporte = deporte;
+        this.imagenUrl = imagenUrl;
     }
+
 
     public boolean contieneNombre(String busqueda){
 String nombreMinuscula = this.equipo.toLowerCase();

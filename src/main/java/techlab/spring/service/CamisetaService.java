@@ -12,12 +12,9 @@ import techlab.spring.repository.CamisetaRepository;
 public class CamisetaService {
     private final CamisetaRepository repository;
 
-    // "BASE DE DATOS" en memoria
-    private final ArrayList<Camiseta> camisetas;
 
     public CamisetaService(CamisetaRepository repository) {
         this.repository = repository;
-        this.camisetas = new ArrayList<>();
     }
 
     public CamisetaResponseDTO agregarCamiseta(Camiseta camiseta){
@@ -53,8 +50,9 @@ public class CamisetaService {
     }
     public List<Camiseta> buscarPorDeporte(Deporte deporte) {
         List<Camiseta> encontradas = new ArrayList<>();
+        List<Camiseta> todasLasCamisetas = this.repository.listarCamisetas();
 
-        for (Camiseta c : camisetas) {
+        for (Camiseta c : todasLasCamisetas) {
             if (c.getDeporte().equals(deporte)) {
                 encontradas.add(c);
             }
@@ -68,8 +66,9 @@ public class CamisetaService {
     }
     public List<Camiseta> buscarPorPrecioMenorOIgual(double precioMaximo) {
         List<Camiseta> encontradas = new ArrayList<>();
+        List<Camiseta> todasLasCamisetas = this.repository.listarCamisetas();
 
-        for (Camiseta c : camisetas) {
+        for (Camiseta c : todasLasCamisetas) {
             if (c.getPrecio() <= precioMaximo) {
                 encontradas.add(c);
             }
@@ -81,7 +80,6 @@ public class CamisetaService {
 
         return encontradas;
     }
-
 
 
        //PUT

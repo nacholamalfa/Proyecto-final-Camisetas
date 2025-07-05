@@ -61,13 +61,15 @@ public class CamisetaController {
 }
 
 @DeleteMapping("/equipo/{equipo}")
-public Camiseta eliminarCamiseta(String equipo){
+public Camiseta eliminarCamiseta(@PathVariable String equipo){
+
         return this.service.borrarCamiseta(equipo);
 }
 
 
     @GetMapping("/list")
     public List<Camiseta> listarCamisetas(){
+
         return this.service.listarCamisetas();
     }
 

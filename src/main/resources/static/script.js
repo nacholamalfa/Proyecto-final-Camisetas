@@ -13,6 +13,7 @@
         document.getElementById('cart-close').addEventListener('click', closeCart);
         document.getElementById('overlay').addEventListener('click', closeCart);
         document.getElementById('search-team').addEventListener('input', debounce(handleSearch, 300));
+        document.getElementById('vaciar-carrito').addEventListener('click', vaciarCarrito);
     }
 
     function debounce(func, wait) {
@@ -83,6 +84,35 @@
         `).join('');
     }
 
+function mostrarFormularioDeporte() {
+    document.getElementById('formulario-deporte').style.display = 'block';
+    document.getElementById('otros-filtros').style.display = 'none';
+}
+
+function mostrarSoloFiltro(filtroId) {
+    document.getElementById('filtro-equipo').style.display = 'none';
+    document.getElementById('filtro-precio').style.display = 'none';
+    document.getElementById('formulario-deporte').style.display = 'none';
+
+    document.getElementById(filtroId).style.display = 'block';
+
+    document.getElementById('botones-filtros').style.display = 'none';
+    document.getElementById('volver-botones').style.display = 'block';
+}
+
+function volverAFiltros() {
+    document.getElementById('filtro-equipo').style.display = 'none';
+    document.getElementById('filtro-precio').style.display = 'none';
+    document.getElementById('formulario-deporte').style.display = 'none';
+
+    document.getElementById('botones-filtros').style.display = 'block';
+    document.getElementById('volver-botones').style.display = 'none';
+}
+
+
+
+
+
     async function buscarPorEquipo() {
         const equipo = document.getElementById('search-team').value.trim();
         if (!equipo) return showError('Por favor ingresa el nombre de un equipo');
@@ -107,7 +137,7 @@
         }
     }
 
-    async function filtrarPorDeporte() {
+    async function aplicarFiltroDeporte() {
         const deporte = document.getElementById('filter-sport').value;
         if (!deporte) return showError('Por favor selecciona un deporte');
         showLoading(true);
@@ -125,6 +155,7 @@
             showLoading(false);
         }
     }
+
 
     async function filtrarPorPrecio() {
         const precio = document.getElementById('max-price').value;
@@ -147,14 +178,14 @@
 
     function mostrarTodos() {
         clearError();
-        displayProducts(allProducts);
+      displayProducts(allProducts);
     }
 
     function handleSearch() {
         const searchTerm = document.getElementById('search-team').value.toLowerCase();
         if (!searchTerm) return displayProducts(allProducts);
         const filtered = allProducts.filter(p => p.equipo.toLowerCase().includes(searchTerm));
-        displayProducts(filtered);
+       displayProducts(filtered);
     }
 
     function addToCart(id, equipo, precio, deporte, imagenUrl) {
@@ -176,8 +207,9 @@
         const cartContainer = document.getElementById('cart-content');
         const cartTotal = document.getElementById('cart-total');
         const itemCount = document.getElementById('cart-counter');
+        const vaciarBtn = document.getElementById('vaciar-carrito');
 
-        if (!cartContainer || !cartTotal || !itemCount) return;
+        if (!cartContainer || !cartTotal || !itemCount || !vaciarBtn) return;
 
         cartContainer.innerHTML = '';
         let total = 0;
@@ -202,6 +234,14 @@
                     <div class="cart-item-info">
                         <div class="cart-item-title">${item.equipo}</div>
                         <div class="cart-item-price">$${item.precio.toFixed(2)} x ${item.cantidad}</div>
+                        <div class="cart-item-controls mt-1">
+                            <button class="btn btn-sm btn-outline-danger me-1" onclick="decreaseQuantity(${item.id})">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-success" onclick="increaseQuantity(${item.id})">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
                     </div>
                     <button class="btn btn-sm btn-danger" onclick="removeFromCart(${item.id})">
                         <i class="fas fa-trash-alt"></i>
@@ -212,7 +252,47 @@
 
         cartTotal.textContent = total.toFixed(2);
         itemCount.textContent = count;
+
+        //Actualizar estado del botón "Vaciar Carrito"
+        if (cart.length === 0) {
+            vaciarBtn.disabled = true;
+            vaciarBtn.classList.remove('btn-outline-danger');
+            vaciarBtn.classList.add('btn-secondary');
+        } else {
+            vaciarBtn.disabled = false;
+            vaciarBtn.classList.remove('btn-secondary');
+            vaciarBtn.classList.add('btn-outline-danger');
+        }
     }
+
+    function vaciarCarrito() {
+        cart = [];
+        updateCartUI();
+    }
+
+
+    function increaseQuantity(id) {
+        const item = cart.find(i => i.id === id);
+        if (item) {
+            item.cantidad++;
+            updateCartUI();
+        }
+    }
+
+    function decreaseQuantity(id) {
+        const item = cart.find(i => i.id === id);
+        if (!item) return;
+
+        if (item.cantidad > 1) {
+            item.cantidad--;
+        } else {
+            // Si tiene solo una unidad, la quitamos del carrito
+            cart = cart.filter(i => i.id !== id);
+        }
+
+        updateCartUI();
+    }
+
 
     function toggleCart() {
         document.getElementById('cart-sidebar').classList.add('active');
