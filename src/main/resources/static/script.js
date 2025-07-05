@@ -1,6 +1,7 @@
   const API_BASE_URL = 'http://localhost:8080/camisetas';
-    let cart = [];
-    let allProducts = [];
+  let pedidos = [];
+  let cart = [];
+  let allProducts = [];
 
     document.addEventListener('DOMContentLoaded', function () {
         loadProducts();
@@ -292,6 +293,64 @@ function volverAFiltros() {
 
         updateCartUI();
     }
+function updatePedidosUI() {
+    const pedidosContainer = document.getElementById('pedidos-container');
+    const pedidosSection = document.getElementById('pedidos');
+
+    if (!pedidosContainer || pedidos.length === 0) {
+        pedidosContainer.innerHTML = `
+            <div class="col-12 text-center text-muted">
+                <p>No se registraron pedidos todavía.</p>
+            </div>`;
+        pedidosSection.style.display = 'block';
+        return;
+    }
+
+    pedidosContainer.innerHTML = pedidos.map(pedido => `
+        <div class="col-12 mb-3">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    Pedido #${pedido.id} - ${pedido.fecha}
+                </div>
+                <ul class="list-group list-group-flush">
+                    ${pedido.items.map(item => `
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            ${item.equipo} (${item.deporte}) x${item.cantidad}
+                            <span>$${(item.precio * item.cantidad).toFixed(2)}</span>
+                        </li>`).join('')}
+                    <li class="list-group-item text-end fw-bold">
+                        Total: $${pedido.total.toFixed(2)}
+                    </li>
+                </ul>
+            </div>
+        </div>
+    `).join('');
+
+    pedidosSection.style.display = 'block';
+
+    // Scroll hasta pedidos
+    document.getElementById('pedidos').scrollIntoView({ behavior: 'smooth' });
+}
+function checkout() {
+    if (cart.length === 0) return;
+
+    // Crear un nuevo pedido simulado
+    const nuevoPedido = {
+        id: pedidos.length + 1,
+        fecha: new Date().toLocaleString(),
+        items: [...cart],
+        total: cart.reduce((sum, item) => sum + item.precio * item.cantidad, 0)
+    };
+
+    pedidos.push(nuevoPedido);
+    vaciarCarrito();
+    updatePedidosUI();
+
+    // Mostrar modal
+    document.getElementById('modal-total').textContent = nuevoPedido.total.toFixed(2);
+    const modal = new bootstrap.Modal(document.getElementById('successModal'));
+    modal.show();
+}
 
 
     function toggleCart() {
