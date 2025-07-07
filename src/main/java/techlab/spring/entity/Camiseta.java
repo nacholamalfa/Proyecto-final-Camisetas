@@ -1,5 +1,6 @@
 package techlab.spring.entity;
 
+
 public class Camiseta {
     private static int contadorId = 1;
    private long id;
@@ -14,6 +15,7 @@ public class Camiseta {
     public Camiseta() {
         this.id = contadorId++;;
     }
+
     public Camiseta(String equipo, double precio, int stock, String talle, Deporte deporte, String imagenUrl) {
         this.id = contadorId++;
         this.equipo = equipo;

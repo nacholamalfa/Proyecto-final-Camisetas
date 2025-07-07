@@ -5,6 +5,9 @@ public class LineaPedido {
     private int cantidad;
     private double subtotal;
 
+    public LineaPedido() {
+
+    }
     public LineaPedido(Camiseta camiseta, int cantidad) {
         this.camiseta = camiseta;
         this.cantidad = cantidad;

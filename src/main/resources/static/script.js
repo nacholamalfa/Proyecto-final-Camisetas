@@ -1,4 +1,5 @@
   const API_BASE_URL = 'http://localhost:8080/camisetas';
+const API_PEDIDOS = 'http://localhost:8080/pedidos';
   let pedidos = [];
   let cart = [];
   let allProducts = [];
@@ -333,23 +334,100 @@ function updatePedidosUI() {
 }
 function checkout() {
     if (cart.length === 0) return;
+    }
+async function checkout() {
+    if (cart.length === 0) return;
 
-    // Crear un nuevo pedido simulado
-    const nuevoPedido = {
-        id: pedidos.length + 1,
-        fecha: new Date().toLocaleString(),
-        items: [...cart],
-        total: cart.reduce((sum, item) => sum + item.precio * item.cantidad, 0)
-    };
+    try {
+        const response = await fetch(`${API_PEDIDOS}/`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                usuarioId: 1,
+                lineasPedido: cart.map(item => ({
+                    camiseta: { id: item.id },
+                    cantidad: item.cantidad
+                }))
+            })
+        });
 
-    pedidos.push(nuevoPedido);
-    vaciarCarrito();
-    updatePedidosUI();
+        const data = await response.json();
 
-    // Mostrar modal
-    document.getElementById('modal-total').textContent = nuevoPedido.total.toFixed(2);
-    const modal = new bootstrap.Modal(document.getElementById('successModal'));
-    modal.show();
+        if (!response.ok) {
+            console.error(data);
+            // Mostramos modal de error en vez de alert
+            showError('No se pudo procesar el pedido');
+            return;
+        }
+
+        await listarPedidos();
+        vaciarCarrito();
+
+        // Mostramos modal de éxito
+        document.getElementById('modal-total').textContent = data.pedido.total.toFixed(2);
+        const modal = new bootstrap.Modal(document.getElementById('successModal'));
+        modal.show();
+    } catch (e) {
+        console.error('Error al procesar pedido:', e);
+        showError('Error inesperado al procesar pedido');
+    }
+}
+
+
+
+
+async function listarPedidos() {
+  try {
+    const res = await fetch(`${API_PEDIDOS}/list`);
+    pedidos = await res.json();
+    renderPedidos(pedidos);
+  } catch(e){ console.error(e); }
+}
+async function buscarPedido() {
+  const id = document.getElementById('pedido-id-input').value;
+  if (!id) return alert('Ingresa un ID válido');
+  try {
+    const res = await fetch(`${API_PEDIDOS}/${id}`);
+    if (res.status === 404) return alert('Pedido no encontrado');
+    const p = await res.json();
+    renderPedidos([p]);
+  } catch(e){ console.error(e); }
+}
+
+async function eliminarPedido(id) {
+  if (!confirm(`Eliminar pedido #${id}?`)) return;
+  try {
+    const res = await fetch(`${API_PEDIDOS}/${id}`, { method: 'DELETE' });
+    if (res.status === 404) alert('Pedido no existe');
+    else {
+      alert('Pedido eliminado');
+      await listarPedidos();
+    }
+  } catch(e){ console.error(e); }
+}
+function renderPedidos(lista) {
+  document.getElementById('pedidos').style.display = 'block';
+  const container = document.getElementById('pedidos-container');
+  container.innerHTML = lista.map(p => `
+    <div class="col-12 mb-3">
+      <div class="card">
+        <div class="card-header bg-primary text-white d-flex justify-content-between">
+          <span>Pedido #${p.id} — Total $${p.total.toFixed(2)}</span>
+          <button class="btn btn-sm btn-danger" onclick="eliminarPedido(${p.id})">
+            <i class="fas fa-trash-alt"></i>
+          </button>
+        </div>
+        <ul class="list-group list-group-flush">
+          ${p.lineasPedido.map(lp => `
+            <li class="list-group-item d-flex justify-content-between">
+              ${lp.camiseta.equipo} x${lp.cantidad}
+              <span>$${(lp.camiseta.precio * lp.cantidad).toFixed(2)}</span>
+            </li>
+          `).join('')}
+        </ul>
+      </div>
+    </div>
+  `).join('');
 }
 
 
