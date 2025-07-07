@@ -4,7 +4,10 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import techlab.spring.dto.PedidoResponseDTO;
 import techlab.spring.entity.Pedido;
+import techlab.spring.entity.Camiseta;
 import techlab.spring.entity.LineaPedido;
+import techlab.spring.entity.Talle;
+import techlab.spring.entity.StockPorTalle;
 import techlab.spring.exception.PedidoNotFoundException;
 import techlab.spring.repository.PedidoRepository;
 import techlab.spring.repository.CamisetaRepository;
@@ -19,14 +22,49 @@ public class PedidoService {
         this.camisetaRepository = camisetaRepository;
     }
 
+    /*public PedidoResponseDTO agregarPedido(Pedido pedido) {
+        String message = this.repository.agregarPedido(pedido);
+        PedidoResponseDTO responseDTO = new PedidoResponseDTO("¡Pedido creado exitosamente!", pedido);
+        responseDTO.setMessage(message);
+        return responseDTO;
+    }*/
     public PedidoResponseDTO agregarPedido(Pedido pedido) {
+        // Procesar las líneas de pedido antes de guardar
+        if (pedido.getLineasPedido() != null && !pedido.getLineasPedido().isEmpty()) {
+            for (LineaPedido linea : pedido.getLineasPedido()) {
+                Camiseta camiseta = camisetaRepository.buscarPorEquipo(linea.getCamiseta().getEquipo());
+                if (camiseta == null) {
+                    throw new RuntimeException("Camiseta no encontrada con equipo: " + linea.getCamiseta().getEquipo());
+                }
+
+                // Buscar stock por talle
+                StockPorTalle stock = camiseta.getStockPorTalle().stream()
+                        .filter(s -> s.getTalle() == linea.getTalle())
+                        .findFirst()
+                        .orElse(null);
+
+                if (stock == null || stock.getCantidad() < linea.getCantidad()) {
+                    throw new RuntimeException("Stock insuficiente para el talle " + linea.getTalle() + " de " + camiseta.getEquipo());
+                }
+
+                // Descontar stock
+                stock.setCantidad(stock.getCantidad() - linea.getCantidad());
+
+                linea.setCamiseta(camiseta);
+                linea.setSubtotal(camiseta.getPrecio() * linea.getCantidad());
+            }
+        }
+        pedido.calcularTotal();
+
         String message = this.repository.agregarPedido(pedido);
         PedidoResponseDTO responseDTO = new PedidoResponseDTO("¡Pedido creado exitosamente!", pedido);
         responseDTO.setMessage(message);
         return responseDTO;
     }
 
+
     public List<Pedido> listarPedidos() {
+
         return this.repository.listarPedidos();
     }
 
@@ -54,7 +92,7 @@ public class PedidoService {
         return encontrados;
     }
 
-    public Pedido agregarLineaPedido(Integer pedidoId, String equipoCamiseta, int cantidad) {
+    public Pedido agregarLineaPedido(Integer pedidoId, String equipoCamiseta, Talle talle, int cantidad) {
         Pedido pedido = this.repository.buscarPorId(pedidoId);
         if (pedido == null) {
             throw new PedidoNotFoundException(pedidoId.toString());
@@ -65,7 +103,7 @@ public class PedidoService {
             throw new RuntimeException("Camiseta no encontrada: " + equipoCamiseta);
         }
 
-        LineaPedido nuevaLinea = new LineaPedido(camiseta, cantidad);
+        LineaPedido nuevaLinea = new LineaPedido(camiseta, cantidad, talle);
         pedido.agregarLinea(nuevaLinea);
         return pedido;
     }

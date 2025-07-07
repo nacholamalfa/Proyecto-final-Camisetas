@@ -88,6 +88,47 @@
             transition: all 0.3s ease;
             position: relative;
         }
+.detalle-producto-box {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.1);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2rem;
+}
+
+.detalle-img {
+  max-width: 100%;
+  max-height: 400px;
+  object-fit: contain;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 10px;
+  background: #fff;
+}
+
+.detalle-info {
+  max-width: 400px;
+}
+
+.detalle-info h2 {
+  font-weight: bold;
+}
+
+.btn-blanco-negro {
+  background-color: #fff;
+  color: #000;
+  border: 1px solid #000;
+  transition: 0.3s;
+}
+
+.btn-blanco-negro:hover {
+  background-color: #000;
+  color: #fff;
+}
+
 
         .cart-btn:hover {
             background: var(--warning-color);
@@ -579,6 +620,9 @@
                         <button class="filter-btn mt-2" onclick="buscarPorEquipo()">
                             <i class="fas fa-search me-1"></i>Aplicar Filtro
                         </button>
+                        <button class="btn btn-secondary" onclick="volverAFiltros(event)">
+                            <i class="fas fa-arrow-left me-1"></i>Volver
+                        </button>
                     </div>
                 </div>
                 <div id="formulario-deporte" style="display: none; margin-top: 1rem;">
@@ -606,6 +650,9 @@
                         <button class="filter-btn mt-2" onclick="filtrarPorPrecio()">
                             <i class="fas fa-dollar-sign me-1"></i>Aplicar Filtro
                         </button>
+                        <button class="btn btn-secondary" onclick="volverAFiltros(event)">
+                            <i class="fas fa-arrow-left me-1"></i>Volver
+                        </button>
                     </div>
                 </div>
 
@@ -625,13 +672,6 @@
                     </button>
                 </div>
                  </div>
-
-    <div id="volver-botones" style="display: none;">
-        <button class="filter-btn mt-3" onclick="volverAFiltros()">
-            <i class="fas fa-arrow-left me-1"></i>Volver a filtros
-        </button>
-    </div>
-
          </section>
 
          <!-- Productos -->
@@ -648,8 +688,10 @@
             <div id="error-container"></div>
 
             <div id="productos-container" class="row">
-                <!-- Los productos se cargarán aquí -->
             </div>
+            <div id="producto-detalle-container" style="display:none;"></div>
+            <button id="btn-volver-listado" class="btn btn-secondary mb-3" style="display:none;" onclick="volverAlListado()">Volver al listado</button>
+
         </section>
         <section id="pedidos" style="display: none; margin-top: 2rem;">
             <h2 class="text-center mb-4">
@@ -706,16 +748,20 @@
 <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content text-center">
-            <div class="modal-header bg-success text-white">
+            <div class="modal-header bg-success text-white border-0 justify-content-center">
                 <h5 class="modal-title" id="successModalLabel">¡Compra Exitosa!</h5>
             </div>
             <div class="modal-body">
+                <i class="fas fa-check-circle success-icon"></i>
                 <p class="fw-bold">¡Gracias por tu compra!</p>
                 <p>Tu pedido ha sido procesado exitosamente.</p>
                 <p class="text-success">Total pagado: $<span id="modal-total"></span></p>
             </div>
             <div class="modal-footer justify-content-center">
-                <button class="btn btn-primary" data-bs-dismiss="modal">Seguir Comprando</button>
+                <button
+                        type="button"
+                        class="btn btn-success"
+                        data-bs-dismiss="modal">Cerrar</button>
             </div>
         </div>
     </div>

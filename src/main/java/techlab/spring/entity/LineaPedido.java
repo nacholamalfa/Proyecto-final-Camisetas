@@ -4,13 +4,15 @@ public class LineaPedido {
     private Camiseta camiseta;
     private int cantidad;
     private double subtotal;
+    private Talle talle;
 
     public LineaPedido() {
 
     }
-    public LineaPedido(Camiseta camiseta, int cantidad) {
+    public LineaPedido(Camiseta camiseta, int cantidad, Talle talle) {
         this.camiseta = camiseta;
         this.cantidad = cantidad;
+        this.talle = talle;
         this.subtotal = camiseta.getPrecio() * cantidad;
     }
     public Camiseta getCamiseta() {
@@ -36,5 +38,9 @@ public class LineaPedido {
 
     public void setSubtotal(double subtotal) {
         this.subtotal = subtotal;
+    }
+
+    public Talle getTalle() {
+        return talle;
     }
 }

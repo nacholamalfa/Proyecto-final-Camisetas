@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import techlab.spring.dto.PedidoResponseDTO;
 import techlab.spring.entity.Pedido;
+import techlab.spring.entity.Talle;
 import techlab.spring.exception.PedidoNotFoundException;
 import techlab.spring.service.PedidoService;
 import java.util.List;
@@ -52,17 +53,6 @@ public class PedidoController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
     }
-
-    @PutMapping("/{id}/agregarLinea")
-    public ResponseEntity<Pedido> agregarLineaPedido(@PathVariable Integer id, @RequestParam String equipoCamiseta, @RequestParam int cantidad) {
-        try {
-            Pedido pedido = this.service.agregarLineaPedido(id, equipoCamiseta, cantidad);
-            return ResponseEntity.ok(pedido);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-        }
-    }
-
     @DeleteMapping("/{id}")
     public ResponseEntity<Pedido> eliminarPedido(@PathVariable Integer id) {
         try {

@@ -1,29 +1,31 @@
 package techlab.spring.entity;
 
 
+import java.util.Collection;
+import java.util.List;
+
 public class Camiseta {
     private static int contadorId = 1;
    private long id;
     private String equipo;
     private double precio;
-    private int stock;
-    private String talle;
+    private Talle talle;
     private Deporte deporte;
     private String imagenUrl;
     private String descripcion;
+    private List<StockPorTalle> stockPorTalle;
 
     public Camiseta() {
         this.id = contadorId++;;
     }
 
-    public Camiseta(String equipo, double precio, int stock, String talle, Deporte deporte, String imagenUrl) {
+    public Camiseta(String equipo, double precio, Deporte deporte, String imagenUrl, List<StockPorTalle> stockPorTalle) {
         this.id = contadorId++;
         this.equipo = equipo;
         this.precio = precio;
-        this.stock = stock;
-        this.talle = talle;
         this.deporte = deporte;
         this.imagenUrl = imagenUrl;
+        this.stockPorTalle = stockPorTalle;
     }
 
 
@@ -63,6 +65,10 @@ return nombreMinuscula.contains(busqueda.toLowerCase());
     public String getDescripcion() {
         return descripcion; }
     public void setDescripcion(String descripcion) {
-        this.descripcion = descripcion; }
+        this.descripcion = descripcion;
+    }
 
+    public List<StockPorTalle> getStockPorTalle() {
+        return stockPorTalle;
+    }
 }
