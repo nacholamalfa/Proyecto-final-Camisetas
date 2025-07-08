@@ -554,6 +554,7 @@
             color: var(--success-color);
             margin-bottom: 1rem;
         }
+
     </style>
 </head>
 
@@ -670,6 +671,10 @@
                     <button class="filter-btn" onclick="mostrarTodos()">
                         <i class="fas fa-list me-1"></i>Mostrar Todos
                     </button>
+                    <button id="btn-agregar-camiseta" class="btn btn-success">
+                        <i class="fas fa-plus me-1"></i>Agregar Camiseta
+                    </button>
+
                 </div>
                  </div>
          </section>
@@ -703,6 +708,9 @@
                 <button class="btn btn-secondary" onclick="listarPedidos()">Listar todos</button>
             </div>
             <div id="pedidos-container" class="row"><!-- aquí cargas los pedidos --></div>
+        </section>
+                </div>
+    </form>
         </section>
     </div>
 </main>

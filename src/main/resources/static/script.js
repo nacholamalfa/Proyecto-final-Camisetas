@@ -194,6 +194,7 @@ function addToCartConCantidad(id, equipo, precio, deporte, imagenUrl, cantidad, 
 }
 
 function volverAlListado() {
+
     document.getElementById('productos-container').style.display = 'flex';
     document.getElementById('botones-filtros').style.display = 'block';
 
@@ -774,3 +775,248 @@ function renderPedidos(lista) {
         if (container) container.innerHTML = '';
     }
 
+function mostrarFormularioAgregarCamiseta() {
+    // Ocultar el listado de productos
+    document.getElementById('productos-container').style.display = 'none';
+    document.getElementById('botones-filtros').style.display = 'none';
+    document.querySelector('.filters').style.display = 'none';
+
+    // Mostrar el formulario
+    const container = document.getElementById('producto-detalle-container');
+    container.style.display = 'block';
+
+    container.innerHTML = `
+        <div class="agregar-camiseta-box">
+            <h2><i class="fas fa-plus-circle me-2"></i>Agregar Nueva Camiseta</h2>
+
+            <form id="form-agregar-camiseta">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="equipo-input" class="form-label">Nombre del Equipo *</label>
+                            <input type="text" id="equipo-input" class="form-control" placeholder="Ej: Real Madrid" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="precio-input" class="form-label">Precio *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" id="precio-input" class="form-control" placeholder="0.00" step="0.01" min="0" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="deporte-select" class="form-label">Deporte *</label>
+                            <select id="deporte-select" class="form-select" required>
+                                <option value="">Selecciona un deporte</option>
+                                <option value="FUTBOL">Fútbol</option>
+                                <option value="NBA">Básquet</option>
+                                <option value="NFL">Fútbol Americano</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="imagen-input" class="form-label">URL de la Imagen</label>
+                            <input type="url" id="imagen-input" class="form-control" placeholder="https://ejemplo.com/imagen.jpg">
+                            <div class="form-text">Opcional: URL de la imagen del producto</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="descripcion-input" class="form-label">Descripción</label>
+                            <textarea id="descripcion-input" class="form-control" rows="3" placeholder="Descripción del producto (opcional)"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Stock por Talle *</label>
+                            <div class="stock-container">
+                                <div class="row mb-2">
+                                    <div class="col-3">
+                                        <label for="stock-s" class="form-label">Talle S</label>
+                                        <input type="number" id="stock-s" class="form-control" min="0" value="0">
+                                    </div>
+                                    <div class="col-3">
+                                        <label for="stock-m" class="form-label">Talle M</label>
+                                        <input type="number" id="stock-m" class="form-control" min="0" value="0">
+                                    </div>
+                                    <div class="col-3">
+                                        <label for="stock-l" class="form-label">Talle L</label>
+                                        <input type="number" id="stock-l" class="form-control" min="0" value="0">
+                                    </div>
+                                    <div class="col-3">
+                                        <label for="stock-xl" class="form-label">Talle XL</label>
+                                        <input type="number" id="stock-xl" class="form-control" min="0" value="0">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Vista previa de la imagen -->
+                        <div class="mb-3">
+                            <label class="form-label">Vista Previa</label>
+                            <div id="imagen-preview" class="border rounded p-3 text-center" style="min-height: 200px;">
+                                <i class="fas fa-image text-muted" style="font-size: 3rem;"></i>
+                                <p class="text-muted mt-2">La imagen aparecerá aquí</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="form-alert" style="display:none;"></div>
+
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save me-1"></i>Guardar Camiseta
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="volverAlListado()">
+                        <i class="fas fa-arrow-left me-1"></i>Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    `;
+
+    // Agregar event listeners
+    setupFormularioEventListeners();
+}
+
+// Configurar event listeners para el formulario
+function setupFormularioEventListeners() {
+    // Preview de imagen
+    document.getElementById('imagen-input').addEventListener('input', function() {
+        const url = this.value;
+        const preview = document.getElementById('imagen-preview');
+
+        if (url) {
+            preview.innerHTML = `<img src="${url}" class="img-fluid" style="max-height: 180px;" alt="Preview" onerror="this.style.display='none';">`;
+        } else {
+            preview.innerHTML = `
+                <i class="fas fa-image text-muted" style="font-size: 3rem;"></i>
+                <p class="text-muted mt-2">La imagen aparecerá aquí</p>
+            `;
+        }
+    });
+
+    // Submit del formulario
+    document.getElementById('form-agregar-camiseta').addEventListener('submit', function(e) {
+        e.preventDefault();
+        agregarNuevaCamiseta();
+    });
+}
+
+// Función para agregar nueva camiseta
+async function agregarNuevaCamiseta() {
+    const equipo = document.getElementById('equipo-input').value.trim();
+    const precio = parseFloat(document.getElementById('precio-input').value);
+    const deporte = document.getElementById('deporte-select').value;
+    const imagenUrl = document.getElementById('imagen-input').value.trim();
+    const descripcion = document.getElementById('descripcion-input').value.trim();
+
+    // Obtener stock por talle
+    const stockS = parseInt(document.getElementById('stock-s').value) || 0;
+    const stockM = parseInt(document.getElementById('stock-m').value) || 0;
+    const stockL = parseInt(document.getElementById('stock-l').value) || 0;
+    const stockXL = parseInt(document.getElementById('stock-xl').value) || 0;
+
+    // Validaciones
+    if (!equipo || !precio || !deporte) {
+        showFormAlert('Por favor completa todos los campos obligatorios', 'danger');
+        return;
+    }
+
+    if (precio <= 0) {
+        showFormAlert('El precio debe ser mayor a 0', 'danger');
+        return;
+    }
+
+    if (stockS + stockM + stockL + stockXL <= 0) {
+        showFormAlert('Debe haber al menos 1 unidad en stock', 'danger');
+        return;
+    }
+
+    // Crear objeto stockPorTalle
+    const stockPorTalle = [
+        { talle: 'S', cantidad: stockS },
+        { talle: 'M', cantidad: stockM },
+        { talle: 'L', cantidad: stockL },
+        { talle: 'XL', cantidad: stockXL }
+    ];
+
+    // Crear objeto camiseta
+    const nuevaCamiseta = {
+        equipo: equipo,
+        precio: precio,
+        deporte: deporte,
+        imagenUrl: imagenUrl || '',
+        descripcion: descripcion || '',
+        stockPorTalle: stockPorTalle
+    };
+
+    try {
+        showFormAlert('Guardando camiseta...', 'info');
+
+        const response = await fetch(`${API_BASE_URL}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(nuevaCamiseta)
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+
+        showFormAlert('¡Camiseta agregada exitosamente!', 'success');
+
+        // Recargar productos y volver al listado después de 2 segundos
+        setTimeout(async () => {
+            await loadProducts();
+            volverAlListado();
+        }, 2000);
+
+    } catch (error) {
+        console.error('Error al agregar camiseta:', error);
+        showFormAlert('Error al agregar la camiseta: ' + error.message, 'danger');
+    }
+}
+
+// Función para mostrar alertas en el formulario
+function showFormAlert(message, type = 'success') {
+    const alertDiv = document.getElementById('form-alert');
+    if (!alertDiv) return;
+
+    alertDiv.innerHTML = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'danger' ? 'fa-exclamation-triangle' : 'fa-info-circle'} me-2"></i>
+            ${message}
+            ${type !== 'info' ? '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' : ''}
+        </div>
+    `;
+    alertDiv.style.display = 'block';
+
+    if (type === 'info') {
+        setTimeout(() => {
+            alertDiv.style.display = 'none';
+            alertDiv.innerHTML = '';
+        }, 3000);
+    }
+}
+
+// Modificar la función setupEventListeners() existente para agregar el botón
+function setupEventListeners() {
+    document.getElementById('cart-toggle').addEventListener('click', toggleCart);
+    document.getElementById('cart-close').addEventListener('click', closeCart);
+    document.getElementById('overlay').addEventListener('click', closeCart);
+    document.getElementById('search-team').addEventListener('input', debounce(handleSearch, 300));
+    document.getElementById('vaciar-carrito').addEventListener('click', vaciarCarrito);
+
+    // Agregar event listener para el botón de agregar camiseta
+    const btnAgregarCamiseta = document.getElementById('btn-agregar-camiseta');
+    if (btnAgregarCamiseta) {
+        btnAgregarCamiseta.addEventListener('click', mostrarFormularioAgregarCamiseta);
+    }
+}
